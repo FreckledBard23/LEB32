@@ -1,0 +1,77 @@
+--- COMPILER ---
+    -- instruction lengths -- 
+        instructions in {brackets} are replaced with NOP if unneccessary
+
+        - if - 3
+            - {load}, load address, jump
+        - set - 1
+            - load
+        - result - 3
+            - {load}, {load}, alu
+        - pixel - 3
+            - {load index}, {load color / character}, wrt
+        - push - 1
+            - push
+        - pop - 1
+            - pop
+        - end - 1
+            - hlt
+
+
+
+
+
+--- INSTRUCTIONS ---
+    - NOP - 0 - does nothing
+    - HLT - 1 - halts
+    - STR - 2 - store into W1 from instruction data
+    - MST - 3 - store into W1 from memory addr R2
+    - ALU - 4 - preform operation between R1 and R2
+    - JMP - 5 - jump to R1 if condition
+    - WRT - 6 - writes R1 to memory addr R2
+    - PSH - 7 - push R1 onto stack
+    - PLL - 8 - pull stack into W1
+
+--- ALU ---
+    instruction data is:
+        0 - add
+        1 - sub
+        2 - multi
+        3 - divide
+        4 - shift
+
+--- JUMP ---
+    instruction data is:
+        0 - unconditional
+        1 - A == B
+        2 - A != B
+        3 - A >  B
+        4 - A <  B
+        5 - A >= B
+        6 - A <= B
+
+--- MICROCODE ---
+    -- FORMAT --
+        0000000000000000 - 0000 - 0000 - 0000 - 0000
+        instruction data - r W1 - r R1 - r R2 - inst
+
+    -- OPCODES --
+        - reg_str
+        - mem_or_data
+        - jmp
+        - hlt
+        - ALU_en
+        - we
+        - psh
+        - pll
+
+--- MEMORY CHUNKS ---
+    0x00000000 to 0x00FFFFFF - ROM
+    0x01000000 to 0x01FFFFFF - RAM
+    0x02000000 to 0x02FFFFFF - SCREEN - Only first 65536 values are used however, due to size of screen. Last pixel is at 0x0200FFFF.
+        - If the highest bit of the data is a one it will only draw one pixel.
+        - If it is not, it will draw a 8x8 rectangle.
+        - BIT FORMAT -
+            0-0000000-000000000000000000000000
+            pixel flag - ascii character - color
+    0xffffffff - KEYBOARD ASCII

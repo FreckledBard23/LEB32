@@ -1,0 +1,8 @@
+set a to 0
+set b to 0
+
+if a == b
+    result a = a + 1
+    if a > 3
+        pixel a 00ff00
+end

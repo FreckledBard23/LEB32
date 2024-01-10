@@ -3,22 +3,58 @@
         instructions in {brackets} are replaced with NOP if unneccessary
 
         - if - 3
-            - {load}, load address, jump
+            - if {reg} {operator} {reg / dec}
+            - {load comparator}, load address, jump
         - set - 1
+            - set {reg} to {dec}
             - load
         - result - 3
+            - result of {reg} {alu op} {reg} to {reg}
             - {load}, {load}, alu
         - pixel - 3
+            - pixel {index / reg} to {reg / color & character}
             - {load index}, {load color / character}, wrt
         - push - 1
+            - push {reg}
             - push
         - pop - 1
+            - pop {reg}
             - pop
         - end - 1
+            - end
             - hlt
+        - store - 3
+            - store {dec / reg} to {addr / reg}
+            - {load data}, {load addr}, wrt
+        - read - 2
+            - read from {addr / reg}
+            - {load addr}, mst
+        - while - 3 plus 3 at end
+            - while {reg} {operator} {reg / dec}
+            - {load comparator}, load address, jump
+        - GOTO - 2
+            - jump to {code label}
+            - {load addr}, jump
+        - define - NA
+            - define {name} as {str to be replaced as}
 
 
-
+--- REGS ---
+    - A
+    - B
+    - C
+    - D
+    - E
+    - F
+    - G
+    - H
+    - J
+    - K
+    - L
+    - M
+    - N
+    - O - used by compiler
+    - P - used by compiler
 
 
 --- INSTRUCTIONS ---

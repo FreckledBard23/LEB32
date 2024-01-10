@@ -1,8 +1,52 @@
-set a to 0
-set b to 0
+define XCOORD as a
+define YCOORD as b
+define DELTAX as c
+define DELTAY as d
 
-if a == b
-    result a = a + 1
-    if a > 3
-        pixel a 00ff00
+// x and y
+set XCOORD to 0
+set YCOORD to 0
+
+// dx and dy
+set DELTAX to 1
+set DELTAY to 1
+
+// positive to negative offset
+define POStoNEG as 2
+
+//p is internal reg, never set. This is always true
+while p == p
+    //x bouncing
+    if XCOORD >= 255
+        result of DELTAX - POStoNEG to DELTAX
+    if XCOORD <= 0
+        result of DELTAX + POStoNEG to DELTAX
+
+    // y bouncing
+    if YCOORD >= 255
+        result of DELTAY - POStoNEG to DELTAY
+    if YCOORD <= 0
+        result of DELTAY + POStoNEG to DELTAY
+
+    //      pixel index      //
+    // calc y
+    result of YCOORD * 256 to n
+    // add x
+    result of XCOORD + n to n
+
+    //clear old point
+    pixel n to 0x00000000
+
+    //    update x and y     //
+    result of XCOORD + DELTAX to XCOORD
+    result of YCOORD + DELTAY to YCOORD
+
+    //    new pixel index    //
+    // calc y
+    result of YCOORD * 256 to n
+    // add x
+    result of XCOORD + n to n
+
+    //set new point
+    pixel n to 0x0000ff00
 end

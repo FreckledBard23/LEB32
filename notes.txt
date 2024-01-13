@@ -2,41 +2,71 @@
     -- instruction lengths -- 
         instructions in {brackets} are replaced with NOP if unneccessary
 
-        - if - 3
+        - if - base 3, 2 more
+            - if statement
             - if {reg} {operator} {reg / dec}
-            - {load comparator}, load address, jump
-        - set - 1
+            - {load comparator mst addr, mst comparator}, set address mst addr, mst address, jump
+
+        - set - base 2
+            - load data into reg
             - set {reg} to {dec}
-            - load
-        - result - 3
-            - result of {reg} {alu op} {reg} to {reg}
-            - {load}, {load}, alu
-        - pixel - 3
-            - pixel {index / reg} to {reg / color & character}
-            - {load index}, {load color / character}, wrt
-        - push - 1
+            - load data mst addr, mst
+
+        - result - base 1, 2 more
+            - perform an operation with the ALU
+            - result of {reg} {alu op} {reg / constant} to {reg}
+            - {load constant mst addr, mst constant}, alu
+
+        - pixel - base 1, 2 more
+            - make pixel index a color. 
+                - if the highest bit of the color and character is 1, it will draw one pixel
+                - if not, it takes the highest 8 bits to use as ascii.
+            - pixel {reg} to {reg / color & character}
+            - {load mst color / character addr, mst color and character}, wrt
+
+        - push - base 1
             - push {reg}
             - push
-        - pop - 1
+
+        - pop - base 1
             - pop {reg}
             - pop
-        - end - 1
+
+        - end - base 1
             - end
             - hlt
-        - store - 3
-            - store {dec / reg} to {addr / reg}
-            - {load data}, {load addr}, wrt
-        - read - 2
+
+        - store - base 1, 2 more
+            - store to ram
+            - store {reg} to {addr / reg}
+            - {load address mst addr, mst address}, wrt
+
+        - read - base 1, 2 more
+            - read from ram
             - read from {addr / reg}
-            - {load addr}, mst
-        - while - 3 plus 3 at end
+            - {load mst addr address, mst addr}, mst
+
+        - while - base 3, 2 more, same at end of loop
+            - while loop. compare reg to constant or reg
             - while {reg} {operator} {reg / dec}
-            - {load comparator}, load address, jump
-        - GOTO - 2
-            - jump to {code label}
-            - {load addr}, jump
+            - {load comparator mst addr, mst comparator}, set address mst addr, mst address, jump
+            
+        - goto - base 3
+            - go to code address tag
+                - to define a tag
+                    :{tag name}:
+                - example:
+                    :printchar:
+            - goto {code label / reg}
+            - mst addr address, mst addr, jump
+
         - define - NA
+            - works like #define in C. The compiler replaces all the names with the set string
             - define {name} as {str to be replaced as}
+
+        - undefine - NA
+            - undoes a define command
+            - undefine {name}
 
 
 --- REGS ---
@@ -52,9 +82,9 @@
     - K
     - L
     - M
-    - N
-    - O - used by compiler
-    - P - used by compiler
+    - N - used by compiler as an address
+    - O - used by compiler as a datapoint
+    - P - used by compiler as a datapoint
 
 
 --- INSTRUCTIONS ---
@@ -76,7 +106,7 @@
         3 - divide
         4 - shift
 
---- JUMP ---
+--- JUMP & IF ---
     instruction data is:
         0 - unconditional
         1 - A == B
@@ -106,7 +136,8 @@
     0x01000000 to 0x01FFFFFF - RAM
     0x02000000 to 0x02FFFFFF - SCREEN - Only first 65536 values are used however, due to size of screen. Last pixel is at 0x0200FFFF.
         - If the highest bit of the data is a one it will only draw one pixel.
-        - If it is not, it will draw a 8x8 rectangle.
+        - If it is not, it will draw a 8x8 rectangle with the ascii value. 
+                                (added ascii 0x01 as solid rectangle)
         - BIT FORMAT -
             0-0000000-000000000000000000000000
             pixel flag - ascii character - color

@@ -14,7 +14,6 @@ set DELTAY to 1
 // positive to negative offset
 define POStoNEG as 2
 
-//p is internal reg, never set. This is always true
 while p == p
     //x bouncing
     if XCOORD >= 255

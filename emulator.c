@@ -56,9 +56,9 @@ void draw_char(int x, int y, Uint32 color, int xside, int yside, char character)
 
 #define num_regs 16
 #define memory_block_size 16777216
-int regs[16];
-int ram[memory_block_size];
-int rom[memory_block_size];
+Uint32 regs[16];
+Uint32 ram[memory_block_size];
+Uint32 rom[memory_block_size];
 int screen[memory_block_size];
 unsigned int addr = 0;
 

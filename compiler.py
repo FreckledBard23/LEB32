@@ -11,16 +11,21 @@
 
 import sys
 
-rom = [None] * 16777216
+rom = [0] * 0
 input_file = input("Filename In: ")
+output_file = input("Filename Out: ")
 
+# get file
 if not input_file.endswith(".leb"):
     print("You need to input a .leb file!")
     sys.exit(1)
 
+print("Compiling...")
+
 # ------------------------------------------------------------------------------------------ #
 # --------------------------------------- PRECOMPILE --------------------------------------- #
 # ------------------------------------------------------------------------------------------ #
+    
 
 def indentation(string):
     spaces = 0
@@ -91,6 +96,7 @@ class broken_down_line:
 
 lexed_lines = [broken_down_line] * 0
 
+line_index = 0
 for line in lines_in_LEB:
     bdl = broken_down_line()
     bdl.indentation_change = line.indentation_change
@@ -99,6 +105,18 @@ for line in lines_in_LEB:
     for index in range(len(bdl.tokens)):
         if bdl.tokens[0] != 'undefine':
             bdl.tokens[index] = check_define_lookup(bdl.tokens[index])
+
+    if bdl.tokens[0] == 'while':
+        end_found = False
+        line_index_offset = 0
+        indentation_ = 0
+        while not end_found:
+            indentation_ += lines_in_LEB[line_index + line_index_offset].indentation_change
+            if lines_in_LEB[line_index + line_index_offset].line.startswith('repeat') and indentation_ <= 0:
+                end_found = True
+                lines_in_LEB[line_index + line_index_offset].line = "end" + lines_in_LEB[line_index].line
+
+            line_index_offset += 1
 
     if bdl.tokens[0] == 'define':
         dle = define_lookup_element()
@@ -112,6 +130,8 @@ for line in lines_in_LEB:
                 break
     else:
         lexed_lines.append(bdl)
+
+    line_index += 1
 
 address = 0
 
@@ -146,31 +166,49 @@ base_inst_len_lookup = {
      "store": 1,
       "read": 1,
      "while": 3,
+                "endwhile": 3,
+      "goto": 1,
+}
+
+base_cons_lookup = {
+        "if": 1,
+       "set": 1,
+    "result": 0,
+     "pixel": 0,
+      "push": 0,
+       "pop": 0,
+       "end": 0,
+     "store": 0,
+      "read": 0,
+     "while": 1,
+                "endwhile": 1,
       "goto": 1,
 }
 
 def is_convertible_to_int(s):
     try:
-        int(s)
+        int(s, 0)
         return True
     except ValueError:
         return False
 
 def find_extra_instructions(tokens):
     if tokens[0] == 'if' and is_convertible_to_int(tokens[3]):
-        return 2
+        return 2, 1
     if tokens[0] == 'result' and is_convertible_to_int(tokens[4]):
-        return 2
+        return 2, 1
     if tokens[0] == 'pixel' and is_convertible_to_int(tokens[3]):
-        return 2
+        return 2, 1
     if tokens[0] == 'store' and is_convertible_to_int(tokens[3]):
-        return 2
+        return 2, 1
     if tokens[0] == 'read' and is_convertible_to_int(tokens[2]):
-        return 2
-    if tokens[0] == 'while' and is_convertible_to_int(tokens[3]):
-        return 2
+        return 2, 1
+    if (tokens[0] == 'while' or tokens[0] == 'endwhile') and is_convertible_to_int(tokens[3]):
+        return 2, 1
     
-    return 0
+    return 0, 0
+
+const_lookup_size = 0
 
 for i in range(len(lexed_lines)):
     fpl = further_proccessed_line()
@@ -187,13 +225,22 @@ for i in range(len(lexed_lines)):
         goto_lookup.append(gle)
     else:
         inst_len = base_inst_len_lookup[fpl.tokens[0]]
-        extra_insts = find_extra_instructions(fpl.tokens)
+        const = base_cons_lookup[fpl.tokens[0]]
+        extra_insts, extra_const = find_extra_instructions(fpl.tokens)
+
+        const_lookup_size += const + extra_const
 
         fpl.extra_insts = extra_insts
         fpl.instruction_len = inst_len + extra_insts
         address += inst_len + extra_insts
 
         further_proccessed_lines.append(fpl)
+
+for line in further_proccessed_lines:
+    line.address += const_lookup_size + 2 #2 is there to ensure that the jump at start is taken into account
+
+for gt in goto_lookup:
+    gt.address += const_lookup_size + 2 #2 is there to ensure that the jump at start is taken into account
 
 # ------------------------------------------------------------------------------------------ #
 # -------------------------------- ADDRESSING COMPILE STACK -------------------------------- #
@@ -207,10 +254,8 @@ class complete_line:
     address = 0
     extra_insts = 0
 
-    while_after = False
-    while_address = 0
-    while_tokens = [''] * 0
-    while_ext_insts = 0
+    start_address = 0
+    end_address = 0
 
 complete_lines = [complete_line] * 0
 
@@ -249,11 +294,12 @@ for line in complete_lines:
             if overall_indentation_change <= 0:
                 csi.end_address = complete_lines[line_index + index_offset].address
 
-                if line.tokens[0] == 'while':
-                    complete_lines[line_index + index_offset].while_tokens = line.tokens
-                    complete_lines[line_index + index_offset].while_after = True
-                    complete_lines[line_index + index_offset].while_address = line.address
-                    complete_lines[line_index + index_offset].while_ext_insts = line.extra_insts
+                line.start_address = csi.start_address
+                line.end_address = csi.end_address
+
+                if complete_lines[line_index + index_offset + 1].tokens[0] == 'endwhile' and line.tokens[0] == 'while':
+                    total_inst_len = complete_lines[line_index].instruction_len
+                    complete_lines[line_index + index_offset + 1].start_address = complete_lines[line_index].address + total_inst_len
 
                 end_found = True
 
@@ -277,6 +323,11 @@ for line in complete_lines:
 # --------------------------------------- FINAL STEPS -------------------------------------- #
 # ------------------------------------------------------------------------------------------ #
 
+def line_index_by_addr(addr):
+    for i in range(len(complete_lines)):
+        if complete_lines[i].address == addr:
+            return i
+
 if_lookup = {
     "==": 1,
     "!=": 2,
@@ -284,6 +335,15 @@ if_lookup = {
      "<": 4,
     ">=": 5,
     "<=": 6
+}
+
+inverse_if_lookup = {
+    "==": 2,
+    "!=": 1,
+     ">": 6,
+     "<": 5,
+    ">=": 4,
+    "<=": 3
 }
 
 regs_lookup = {
@@ -305,7 +365,16 @@ regs_lookup = {
     'p': 15
 }
 
-def create_instruction(inst_data, W1, R1, R2, inst):
+alu_lookup = {
+    '+': 0,
+    '-': 1,
+    '*': 2,
+    '/': 3,
+    '<<': 4,
+    '>>': 5
+}
+
+def create_inst(inst_data, W1, R1, R2, inst):
     instruction =  inst_data << 16
     instruction += W1 << 12
     instruction += R1 << 8
@@ -314,5 +383,160 @@ def create_instruction(inst_data, W1, R1, R2, inst):
 
     return instruction
 
+def format_hex(num):
+    return "{:08x}".format(num & 0xFFFFFFFF)
+
+def format_addr(num):
+    return "{:06x}".format(num)
+
+all_instructions = [''] * 0
+
+constant_value_lookup = [0] * 0 # section of rom at start to store all the constant values
+
+def constant_value_mst(value, data_reg):
+    constant_value_lookup.append(format_hex(value))
+
+    if len(constant_value_lookup) > 0xFFFE:
+        print("Too many constant values! (How did you pull that off?)")
+        sys.exit(1)
+
+    instructions.append(format_hex(create_inst(len(constant_value_lookup) + 1, regs_lookup['n'], 0, 0, 2)))
+    instructions.append(format_hex(create_inst(0, regs_lookup[data_reg], 0, regs_lookup['n'], 3)))
+
+def check_goto_lookup(s):
+    for gte in goto_lookup:
+        if gte.name == s:
+            return gte.address
+        
+    print(f"Invalid goto tag. Given tag: {s}")
+    sys.exit(1)
+
 for line in complete_lines:
-    instructions = [0] * line.instruction_len
+    instructions = [''] * 0
+
+    if line.extra_insts != 0:
+        if line.tokens[0] == 'if':
+            constant_value_mst(int(line.tokens[3], 0), 'p')
+        if line.tokens[0] == 'result':
+            constant_value_mst(int(line.tokens[4], 0), 'p')
+        if line.tokens[0] == 'pixel':
+            constant_value_mst(int(line.tokens[3], 0), 'p')
+        if line.tokens[0] == 'store':
+            if int(line.tokens[3], 0) < 0x01000000:
+                print(f"Store command stores to ROM (an invalid location)!\nStore command: {line.tokens}")
+                sys.exit(1)
+            constant_value_mst(int(line.tokens[3], 0), 'p')
+        if line.tokens[0] == 'read':
+            constant_value_mst(int(line.tokens[2], 0), 'p')
+        if line.tokens[0] == 'while':
+            constant_value_mst(int(line.tokens[3], 0), 'p')
+        if line.tokens[0] == 'endwhile':
+            constant_value_mst(int(line.tokens[3], 0), 'p')
+
+
+    if line.tokens[0] == 'if':
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[3]]
+
+        data =  inverse_if_lookup[line.tokens[2]]
+        data += regs_lookup['o'] << 4
+
+        constant_value_mst(line.end_address + complete_lines[line_index_by_addr(line.end_address)].instruction_len, 'o')
+        instructions.append(format_hex(create_inst(data, 0, regs_lookup[line.tokens[1]], r2, 5)))
+
+    if line.tokens[0] == 'set':
+        constant_value_mst(int(line.tokens[3], 0), line.tokens[1])
+
+    if line.tokens[0] == 'result':
+        w1 = regs_lookup[line.tokens[6]]
+        r1 = regs_lookup[line.tokens[2]]
+
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[4]]
+
+        instructions.append(format_hex(create_inst(alu_lookup[line.tokens[3]], w1, r1, r2, 4)))
+
+    if line.tokens[0] == 'pixel':
+        if line.extra_insts != 0:
+            r1 = regs_lookup['p']
+        else:
+            r1 = regs_lookup[line.tokens[3]]
+
+        instructions.append(format_hex(create_inst(2, 0, r1, regs_lookup[line.tokens[1]], 6)))
+
+    if line.tokens[0] == 'push':
+        instructions.append(format_hex(create_inst(0, 0, regs_lookup[line.tokens[1]], 0, 7)))
+
+    if line.tokens[0] == 'pop':
+        instructions.append(format_hex(create_inst(0, regs_lookup[line.tokens[1]], 0, 0, 8)))
+
+    if line.tokens[0] == 'end':
+        instructions.append(format_hex(1))
+
+    if line.tokens[0] == 'store':
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[3]]
+
+        instructions.append(format_hex(create_inst(0, 0, regs_lookup[line.tokens[1]], r2, 6)))
+
+    if line.tokens[0] == 'read':
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[2]]
+
+        instructions.append(format_hex(create_inst(0, regs_lookup[line.tokens[4]], 0, r2, 3)))
+
+    if line.tokens[0] == 'while':
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[3]]
+
+        data =  inverse_if_lookup[line.tokens[2]]
+        data += regs_lookup['o'] << 4
+
+        constant_value_mst(line.end_address + complete_lines[line_index_by_addr(line.end_address)].instruction_len, 'o')
+        instructions.append(format_hex(create_inst(data, 0, regs_lookup[line.tokens[1]], r2, 5)))
+
+    if line.tokens[0] == 'endwhile':
+        if line.extra_insts != 0:
+            r2 = regs_lookup['p']
+        else:
+            r2 = regs_lookup[line.tokens[3]]
+
+        data =  if_lookup[line.tokens[2]]
+        data += regs_lookup['o'] << 4
+
+        constant_value_mst(line.start_address, 'o')
+        instructions.append(format_hex(create_inst(data, 0, regs_lookup[line.tokens[1]], r2, 5)))
+
+    if line.tokens[0] == 'goto':
+        constant_value_mst(check_goto_lookup(line.tokens[1]), 'o')
+        instructions.append(format_hex(create_inst(regs_lookup['o'] << 4, 0, 0, 0, 5)))
+
+    all_instructions = all_instructions + instructions
+#     print(f"{format_addr(line.address)} {instructions} {line.tokens[0]}")
+# print(constant_value_lookup)
+rom.append(format_hex(create_inst(2 + len(constant_value_lookup), regs_lookup['n'], 0, 0, 2)))
+rom.append(format_hex(create_inst((regs_lookup['n'] << 4), 0, 0, 0, 5)))
+
+rom += constant_value_lookup
+rom += all_instructions
+
+print("Done Compiling!\nStoring as file...")
+
+while len(rom) < 0xFFFFFF + 1:
+    rom.append(format_hex(0))
+
+with open(output_file, 'w') as file:
+    for i in range(0, 0xFFFFFF + 1, 8):
+        file.write(f"{format_addr(i)}: {rom[i]} {rom[i + 1]} {rom[i + 2]} {rom[i + 3]} {rom[i + 4]} {rom[i + 5]} {rom[i + 6]} {rom[i + 7]}\n")
+
+print("Done Storing!")

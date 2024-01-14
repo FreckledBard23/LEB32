@@ -5,7 +5,8 @@
         - if - base 3, 2 more
             - if statement
             - if {reg} {operator} {reg / dec}
-            - {load comparator mst addr, mst comparator}, set address mst addr, mst address, jump
+            - {load comparator mst addr, mst comparator}, set address mst addr,
+                        mst address, jump
 
         - set - base 2
             - load data into reg
@@ -19,7 +20,8 @@
 
         - pixel - base 1, 2 more
             - make pixel index a color. 
-                - if the highest bit of the color and character is 1, it will draw one pixel
+                - if the highest bit of the color and character is 1,
+                            it will draw one pixel
                 - if not, it takes the highest 8 bits to use as ascii.
             - pixel {reg} to {reg / color & character}
             - {load mst color / character addr, mst color and character}, wrt
@@ -43,13 +45,20 @@
 
         - read - base 1, 2 more
             - read from ram
-            - read from {addr / reg}
+            - read from {addr / reg} into {reg}
             - {load mst addr address, mst addr}, mst
 
-        - while - base 3, 2 more, same at end of loop
+        - while - base 3, 2 mored
             - while loop. compare reg to constant or reg
             - while {reg} {operator} {reg / dec}
-            - {load comparator mst addr, mst comparator}, set address mst addr, mst address, jump
+            - {load comparator mst addr, mst comparator}, set address mst addr,
+                        mst address, jump
+
+        - repeat - base 3, 2 more
+            - end of while loop
+            - repeat
+            - {load comparator mst addr, mst comparator}, set address mst addr,
+                        mst address, jump
             
         - goto - base 3
             - go to code address tag
@@ -61,7 +70,8 @@
             - mst addr address, mst addr, jump
 
         - define - NA
-            - works like #define in C. The compiler replaces all the names with the set string
+            - works like #define in C. The compiler replaces all the names with the
+                        set string
             - define {name} as {str to be replaced as}
 
         - undefine - NA
@@ -93,7 +103,7 @@
     - STR - 2 - store into W1 from instruction data
     - MST - 3 - store into W1 from memory addr R2
     - ALU - 4 - preform operation between R1 and R2
-    - JMP - 5 - jump to R1 if condition
+    - JMP - 5 - jump to reg(data >> 4) if R1 condition R2
     - WRT - 6 - writes R1 to memory addr R2
     - PSH - 7 - push R1 onto stack
     - PLL - 8 - pull stack into W1
@@ -104,7 +114,8 @@
         1 - sub
         2 - multi
         3 - divide
-        4 - shift
+        4 - shift left
+        5 - shift right
 
 --- JUMP & IF ---
     instruction data is:

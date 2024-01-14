@@ -45,8 +45,8 @@ void draw_char(int x, int y, Uint32 color, int xside, int yside, char character)
 
             bool draw = ascii_table[character * 64 + (yoff * xside + xoff)];
 
-            if(newx < screenx && newx >= 0 && newy < screeny && newy >= 0){
-                pixels[newy * screenx + newx] = color * draw;
+            if(newx < screenx && newx >= 0 && newy < screeny && newy >= 0 && draw){
+                pixels[newy * screenx + newx] = color;
             }
         }
     }
@@ -56,9 +56,9 @@ void draw_char(int x, int y, Uint32 color, int xside, int yside, char character)
 
 #define num_regs 16
 #define memory_block_size 16777216
-Uint32 regs[16];
-Uint32 ram[memory_block_size];
-Uint32 rom[memory_block_size];
+int regs[16];
+int ram[memory_block_size];
+int rom[memory_block_size];
 int screen[memory_block_size];
 unsigned int addr = 0;
 
@@ -102,57 +102,6 @@ int read_rom(char* file_name){
         sscanf(line, "%*x: %x %x %x %x %x %x %x %x",
                &rom[i * 8 + 0], &rom[i * 8 + 1], &rom[i * 8 + 2], &rom[i * 8 + 3],
                &rom[i * 8 + 4], &rom[i * 8 + 5], &rom[i * 8 + 6], &rom[i * 8 + 7]);
-
-        float percent_done = ((float)i / NUM_ROWS) * 20;
-
-        for(int character = 0; character < 20; character++){
-            if(character <= percent_done){
-                progress_bar[character] = '=';
-            } else {
-                progress_bar[character] = ' ';
-            }
-        }
-
-        if((int)percent_done > last_whole_percentage){
-            for(int i = 0; i < 27; i++){
-                printf("\b"); //hacky way to clear progress bar
-            }
-            printf("     [%s]", progress_bar);
-            last_whole_percentage = (int)percent_done;
-        }
-    }
-
-    printf(" DONE!\n"); //needed newline after progress bar;
-    fclose(file);
-}
-
-int read_ram(char* file_name){
-    char progress_bar[19];
-    int last_whole_percentage = 0;
-
-    for(int i = 0; i < 20; i++){
-        progress_bar[i] = ' ';
-    }
-
-    FILE *file;
-    char line[MAX_LINE_LENGTH];
-
-    file = fopen(file_name, "r"); // Replace "hex_values.txt" with your file name
-
-    if (file == NULL) {
-        perror("Error opening file for RAM");
-        return 1;
-    }
-
-    for (int i = 0; i < NUM_ROWS; i++) {
-        if (fgets(line, MAX_LINE_LENGTH, file) == NULL) {
-            break; // End of file or an error occurred
-        }
-
-        // Skip the address at the side and read hex values
-        sscanf(line, "%*x: %x %x %x %x %x %x %x %x",
-               &ram[i * 8 + 0], &ram[i * 8 + 1], &ram[i * 8 + 2], &ram[i * 8 + 3],
-               &ram[i * 8 + 4], &ram[i * 8 + 5], &ram[i * 8 + 6], &ram[i * 8 + 7]);
 
         float percent_done = ((float)i / NUM_ROWS) * 20;
 
@@ -241,14 +190,14 @@ int get_mem_block(int address){
 }
 
 int main(int argc, char *argv[]){
-    if(argc < 3){
-        printf("Add a filename for ROM and RAM!\nTry calling ./emulator.exe {ROM filename} {RAM filename}\n");
+    if(argc < 2){
+        printf("Add a filename for ROM!\nTry calling ./emulator.exe {ROM filename}\n");
         return 1;
     }
 
     bool debugging = false;
-    if(argc >= 4){
-        if(!strcmp(argv[3], "-d")){
+    if(argc >= 3){
+        if(!strcmp(argv[2], "-d")){
             printf("Debugging Enabled\n");
             debugging = true;
         }
@@ -257,10 +206,6 @@ int main(int argc, char *argv[]){
     printf("Reading File for ROM: %s\n", argv[1]);
 
     read_rom(argv[1]);
-
-    printf("Reading File for RAM: %s\n", argv[2]);
-
-    read_ram(argv[2]);
 
     printf("Reading ASCII table");
 
@@ -354,8 +299,11 @@ int main(int argc, char *argv[]){
                 case 3:
                     regs[W1] = regs[R1] / regs[R2];
                     break;
-                case 4: //might not work if shifting right
+                case 4:
                     regs[W1] = regs[R1] << regs[R2];
+                    break;
+                case 5:
+                    regs[W1] = regs[R1] >> regs[R2];
                     break;
             
                 default:
@@ -466,6 +414,7 @@ int main(int argc, char *argv[]){
             addr++;
         }
 
+        printf("%x %x %x\n", regs[0], regs[1], regs[4]);
         // Update the screen
         SDL_RenderPresent(renderer);
     }

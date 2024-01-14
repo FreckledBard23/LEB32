@@ -5,47 +5,36 @@ define DELTAY as d
 
 // x and y
 set XCOORD to 0
-set YCOORD to 0
+set YCOORD to 5
 
 // dx and dy
-set DELTAX to 1
+set DELTAX to 3
 set DELTAY to 1
 
-// positive to negative offset
-define POStoNEG as 2
+define INDEX as e
 
 while p == p
-    //x bouncing
-    if XCOORD >= 255
-        result of DELTAX - POStoNEG to DELTAX
-    if XCOORD <= 0
-        result of DELTAX + POStoNEG to DELTAX
-
-    // y bouncing
-    if YCOORD >= 255
-        result of DELTAY - POStoNEG to DELTAY
-    if YCOORD <= 0
-        result of DELTAY + POStoNEG to DELTAY
-
-    //      pixel index      //
-    // calc y
-    result of YCOORD * 256 to n
-    // add x
-    result of XCOORD + n to n
-
-    //clear old point
-    pixel n to 0x00000000
-
     //    update x and y     //
     result of XCOORD + DELTAX to XCOORD
     result of YCOORD + DELTAY to YCOORD
 
-    //    new pixel index    //
-    // calc y
-    result of YCOORD * 256 to n
-    // add x
-    result of XCOORD + n to n
+    if XCOORD > 240
+        result of DELTAX * -1 to DELTAX
+    if XCOORD < 0
+        result of DELTAX * -1 to DELTAX
 
-    //set new point
-    pixel n to 0x0000ff00
+    if YCOORD > 240
+        result of DELTAY * -1 to DELTAY
+    if YCOORD < 0
+        result of DELTAY * -1 to DELTAY
+
+    //       draw ball       //
+    pixel INDEX to 0x01000000
+
+    result of YCOORD << 8 to INDEX
+    result of XCOORD + INDEX to INDEX
+
+    pixel INDEX to 0x0100FF00
+    
+repeat
 end

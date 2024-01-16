@@ -1,0 +1,103 @@
+define XCOORD as a
+define YCOORD as b
+define DELTAX as c
+define DELTAY as d
+
+define INDEX as e
+
+define PLAYER as f
+define COUNTER as m
+
+// x and y
+set XCOORD to 128
+set YCOORD to 127
+
+// dx and dy
+set DELTAX to -2
+set DELTAY to 1
+
+set PLAYER as 60
+define SPEED as 4
+
+define CLEAR as 0x01000000
+define PLAYERCOL as 0x01FF00FF
+define KEYBOARD as 0xFFFFFFFF
+
+define COLOR as g
+define KEYBOARD_IN as h
+
+while p == p
+    //    update x and y     //
+    result of XCOORD + DELTAX to XCOORD
+    result of YCOORD + DELTAY to YCOORD
+
+    if XCOORD >= 248
+        result of DELTAX * -1 to DELTAX
+    if XCOORD <= 0
+        end
+
+    if XCOORD <= 16
+        if YCOORD >= PLAYER
+            push PLAYER
+
+            result of PLAYER + 48 into PLAYER
+            if YCOORD <= PLAYER
+                result of DELTAX * -1 to DELTAX
+
+            pop PLAYER
+
+    if YCOORD >= 248
+        result of DELTAY * -1 to DELTAY
+    if YCOORD <= 0
+        result of DELTAY * -1 to DELTAY
+
+    //       draw ball       //
+    pixel INDEX to 0x01000000
+
+    result of YCOORD << 8 to INDEX
+    result of XCOORD + INDEX to INDEX
+
+    pixel INDEX to 0x0100FF00
+    
+    read from KEYBOARD into KEYBOARD_IN
+    if KEYBOARD_IN != 0
+        goto clear_player
+        :clear_player_exit:
+        if KEYBOARD_IN == 119
+            result of PLAYER - SPEED to PLAYER
+        if KEYBOARD_IN == 115
+            result of PLAYER + SPEED to PLAYER
+    goto color_player
+    :draw_player_exit:
+
+    set COUNTER to 0
+repeat
+
+:clear_player:
+set COLOR to CLEAR
+goto draw_player
+
+:color_player:
+set COLOR to PLAYERCOL
+goto draw_player
+
+:draw_player:
+set COUNTER to 0
+while COUNTER < 5
+    push INDEX
+    result of COUNTER * 5 to INDEX
+    result of INDEX + PLAYER to INDEX
+    result of INDEX << 8 to INDEX
+    result of INDEX + 8 to INDEX
+
+    pixel INDEX to COLOR
+    pop INDEX
+
+    result of COUNTER + 1 to COUNTER
+repeat
+if COLOR == CLEAR
+    goto clear_player_exit
+if COLOR == PLAYERCOL
+    goto draw_player_exit
+
+end

@@ -392,8 +392,8 @@ int main(int argc, char *argv[]){
         
         //push
         if(inst == 7){
-            stack[stack_pointer] = regs[R1];
             stack_pointer++;
+            stack[stack_pointer] = regs[R1];
 
             if(stack_pointer > 255){
                 stack_pointer = 0;
@@ -413,8 +413,6 @@ int main(int argc, char *argv[]){
         if(!jmp){
             addr++;
         }
-
-        printf("%x %x %x\n", regs[0], regs[1], regs[4]);
         // Update the screen
         SDL_RenderPresent(renderer);
     }

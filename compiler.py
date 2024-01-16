@@ -107,14 +107,15 @@ for line in lines_in_LEB:
             bdl.tokens[index] = check_define_lookup(bdl.tokens[index])
 
     if bdl.tokens[0] == 'while':
-        end_found = False
+        loop = True
         line_index_offset = 0
         indentation_ = 0
-        while not end_found:
-            indentation_ += lines_in_LEB[line_index + line_index_offset].indentation_change
-            if lines_in_LEB[line_index + line_index_offset].line.startswith('repeat') and indentation_ <= 0:
-                end_found = True
-                lines_in_LEB[line_index + line_index_offset].line = "end" + lines_in_LEB[line_index].line
+        while loop:
+            index_ = line_index + line_index_offset
+            indentation_ += lines_in_LEB[max(index_ - 1, 0)].indentation_change
+            if lines_in_LEB[index_].line.strip() == 'repeat' and indentation_ <= 0:
+                loop = False
+                lines_in_LEB[index_].line = "end" + lines_in_LEB[line_index].line.strip()
 
             line_index_offset += 1
 
@@ -167,7 +168,7 @@ base_inst_len_lookup = {
       "read": 1,
      "while": 3,
                 "endwhile": 3,
-      "goto": 1,
+      "goto": 3,
 }
 
 base_cons_lookup = {
@@ -290,7 +291,6 @@ for line in complete_lines:
         overall_indentation_change = 0
         while end_found == False:
             overall_indentation_change += complete_lines[line_index + index_offset].indentation_change
-
             if overall_indentation_change <= 0:
                 csi.end_address = complete_lines[line_index + index_offset].address
 
@@ -522,8 +522,8 @@ for line in complete_lines:
         instructions.append(format_hex(create_inst(regs_lookup['o'] << 4, 0, 0, 0, 5)))
 
     all_instructions = all_instructions + instructions
-#     print(f"{format_addr(line.address)} {instructions} {line.tokens[0]}")
-# print(constant_value_lookup)
+    print(f"{format_addr(line.address)} {instructions} {line.tokens[0]}")
+print(constant_value_lookup)
 rom.append(format_hex(create_inst(2 + len(constant_value_lookup), regs_lookup['n'], 0, 0, 2)))
 rom.append(format_hex(create_inst((regs_lookup['n'] << 4), 0, 0, 0, 5)))
 

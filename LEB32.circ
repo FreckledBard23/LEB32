@@ -1066,11 +1066,10 @@
       <a name="addrWidth" val="24"/>
       <a name="appearance" val="logisim_evolution"/>
       <a name="contents">addr/data: 24 32
-bd002 d00005 0 0 1 1 20 10
-20 ffffffff 16 2d002 d3 3d002 10d3 4d002
-20d3 5d002 30d3 6d002 e0d3 e20ff5 24 1134
-7d002 f0d3 8d002 e0d3 e600f5 9d002 f0d3 222f4
-ad002 e0d3 e10ff5 1
+8d002 d00005 c 80ff00ff 0 14 1000 9
+2d002 e0d3 e00005 3d002 f0d3 20f06 4d002 f0d3
+5d002 e0d3 e200f5 6d002 d3 7d002 e0d3 e00005
+1
 </a>
       <a name="dataWidth" val="32"/>
       <a name="labelvisible" val="true"/>

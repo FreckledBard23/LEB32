@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
+#include <windows.h>
+#include <stdlib.h>
 #define PI 3.1415926535
 
 
@@ -132,7 +134,21 @@ int read_ascii(){
     FILE *file;
     char line[MAX_LINE_LENGTH];
 
-    file = fopen("ascii_table", "r"); // Replace "hex_values.txt" with your file name
+    // Get the full path to the executable
+    char exe_path[1024];
+    GetModuleFileName(NULL, exe_path, sizeof(exe_path));
+
+    // Remove the executable filename to get the directory
+    char* last_slash = strrchr(exe_path, '\\');
+    if (last_slash != NULL) {
+        *last_slash = '\0';
+    }
+
+    // Construct the absolute path to the file
+    char file_path[1024];
+    sprintf(file_path, "%s\\ascii_table", exe_path);
+
+    file = fopen(file_path, "r"); // Replace "hex_values.txt" with your file name
 
     if (file == NULL) {
         perror("Error opening file for ASCII");

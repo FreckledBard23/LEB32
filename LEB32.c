@@ -254,9 +254,9 @@ int main(int argc, char *argv[]){
                 halted = true;
             }
 
-            if (event.type == SDL_TEXTINPUT) {
+            if (event.type == SDL_KEYDOWN) {
                 // Handle text input events
-                keyboard_buffer = event.text.text[0];
+                keyboard_buffer = (char)event.key.keysym.sym;
             }
         }
 

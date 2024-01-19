@@ -13,7 +13,7 @@ set XCOORD to 128
 set YCOORD to 127
 
 // dx and dy
-set DELTAX to -2
+set DELTAX to 2
 set DELTAY to 1
 
 set PLAYER as 60
@@ -40,7 +40,7 @@ while p == p
         if YCOORD >= PLAYER
             push PLAYER
 
-            result of PLAYER + 48 into PLAYER
+            result of PLAYER + 40 into PLAYER
             if YCOORD <= PLAYER
                 result of DELTAX * -1 to DELTAX
 

@@ -11,14 +11,26 @@
 
 import sys
 
-rom = [0] * 0
-input_file = input("Filename In: ")
-output_file = input("Filename Out: ")
+# Check if command-line arguments are provided
+if len(sys.argv) > 2:
+    # The first element in sys.argv (index 0) is the script name itself
+    # The actual command-line arguments start from index 1
+    arguments = sys.argv[1:]
+else:
+    print("Not enough arguments! Try running python compiler.py [input file] [output file]")
+    sys.exit(1)
+
+input_file = arguments[0]
+output_file = arguments[1]
+
+print(input_file, output_file)
 
 # get file
 if not input_file.endswith(".leb"):
     print("You need to input a .leb file!")
     sys.exit(1)
+
+rom = [''] * 0
 
 print("Compiling...")
 
@@ -113,6 +125,7 @@ for line in lines_in_LEB:
         while loop:
             index_ = line_index + line_index_offset
             indentation_ += lines_in_LEB[max(index_ - 1, 0)].indentation_change
+            print(index_, lines_in_LEB[index_].line.strip(), indentation_)
             if lines_in_LEB[index_].line.strip() == 'repeat' and indentation_ <= 0:
                 loop = False
                 lines_in_LEB[index_].line = "end" + lines_in_LEB[line_index].line.strip()

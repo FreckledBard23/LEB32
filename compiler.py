@@ -420,6 +420,9 @@ def check_goto_lookup(s):
     for gte in goto_lookup:
         if gte.name == s:
             return gte.address
+
+    if is_convertible_to_int(s):
+        return int(s, 0)
         
     print(f"Invalid goto tag. Given tag: {s}")
     sys.exit(1)

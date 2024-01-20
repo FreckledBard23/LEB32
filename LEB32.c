@@ -37,7 +37,7 @@ void draw_box_filled(int x, int y, Uint32 color, int xside, int yside){
 }
 
 bool ascii_table[8128];
-char keyboard_buffer = (char)(0);
+int keyboard_buffer = 0;
 //takes in ul x and y and x and y side lengths to draw a char
 void draw_char(int x, int y, Uint32 color, int xside, int yside, char character){
     for(int xoff = 0; xoff < xside; ++xoff){
@@ -180,8 +180,8 @@ int mem(int address){
     int block = address / memory_block_size;
 
     if(address == 0xffffffff){
-        int return_value = (int)keyboard_buffer;
-        keyboard_buffer = (char)(0);
+        int return_value = keyboard_buffer;
+        keyboard_buffer = 0;
         return return_value;
     }
 
@@ -255,8 +255,23 @@ int main(int argc, char *argv[]){
             }
 
             if (event.type == SDL_KEYDOWN) {
+                // Handle key down events
+                switch (event.key.keysym.sym) {
+                    case SDLK_BACKSPACE:
+                        keyboard_buffer = (8);
+                        break;
+                    case SDLK_ESCAPE:
+                        keyboard_buffer = (27);
+                        break;
+                    case SDLK_RETURN:
+                        keyboard_buffer = (13);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (event.type == SDL_TEXTINPUT) {
                 // Handle text input events
-                keyboard_buffer = (char)event.key.keysym.sym;
+                keyboard_buffer = (int)event.text.text[0];
             }
         }
 
@@ -283,7 +298,7 @@ int main(int argc, char *argv[]){
             printf("addr: %08x inst: %04x, %x, %x, %x, %x\n", 
                           addr, inst_data, W1, R1, R2, inst);
         }
-        
+
         //hlt
         if(inst == 1){
             halted = true;

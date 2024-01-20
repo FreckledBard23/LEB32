@@ -295,8 +295,12 @@ int main(int argc, char *argv[]){
         int inst_data = (entire_instruction & 0xFFFF0000) >> 16;
 
         if(debugging){
-            printf("addr: %08x inst: %04x, %x, %x, %x, %x\n", 
-                          addr, inst_data, W1, R1, R2, inst);
+            printf("addr: %08x inst: %04x, %x, %x, %x, %x regs: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n", 
+                          addr, inst_data, W1, R1, R2, inst,
+                          regs[0], regs[1], regs[2], regs[3],
+                          regs[4], regs[5], regs[6], regs[7],
+                          regs[8], regs[9], regs[10], regs[11],
+                          regs[12], regs[13], regs[14], regs[15]);
         }
 
         //hlt

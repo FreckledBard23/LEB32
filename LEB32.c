@@ -207,7 +207,7 @@ int get_mem_block(int address){
 
 int main(int argc, char *argv[]){
     if(argc < 2){
-        printf("Add a filename for ROM!\nTry calling ./emulator.exe {ROM filename}\n");
+        printf("Add a filename for ROM!\nTry calling ./LEB32.exe {ROM filename}\n");
         return 1;
     }
 
@@ -397,20 +397,25 @@ int main(int argc, char *argv[]){
             }
         }
 
+        int write_address = 0;
         //wrt
         if(inst == 6){
             switch (get_mem_block(regs[R2] + inst_data * memory_block_size))
             {
                 case 1:
-                    ram[regs[R2]] = regs[R1];
+                    write_address = regs[R2];
+                    while (write_address >= memory_block_size) {write_address -= memory_block_size;}
+                    ram[write_address] = regs[R1];
                     break;
                 case 2:
-                    if(regs[R2] < screenx * screeny){
+                    write_address = regs[R2];
+                    while (write_address >= memory_block_size) {write_address -= memory_block_size;}
+                    if(write_address < screenx * screeny){
                         if((inst_data >> 7) == 1){
-                            pixels[regs[R2]] = regs[R1];
+                            pixels[write_address] = regs[R1];
                         } else {
-                            int y = regs[R2] / screenx;
-                            int x = regs[R2] % screenx;
+                            int y = write_address / screenx;
+                            int x = write_address % screenx;
 
                             draw_char(x, y, regs[R1], 8, 8, (char)(regs[R1] >> 24));
                         }

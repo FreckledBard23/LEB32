@@ -534,8 +534,16 @@ for line in complete_lines:
         instructions.append(format_hex(create_inst(data, 0, regs_lookup[line.tokens[1]], r2, 5)))
 
     if line.tokens[0] == 'goto':
-        constant_value_mst(check_goto_lookup(line.tokens[1]), 'o')
-        instructions.append(format_hex(create_inst(regs_lookup['o'] << 4, 0, 0, 0, 5)))
+        if line.tokens[1] in regs_lookup.keys():
+            # too lazy to have a dynamic instruction length, fixing not having a constant value mst
+            constant_value_lookup.append(format_hex(0))
+            instructions.append(format_hex(0))
+            instructions.append(format_hex(0))
+
+            instructions.append(format_hex(create_inst(regs_lookup[line.tokens[1]] << 4, 0, 0, 0, 5)))
+        else:
+            constant_value_mst(check_goto_lookup(line.tokens[1]), 'o')
+            instructions.append(format_hex(create_inst(regs_lookup['o'] << 4, 0, 0, 0, 5)))
 
     all_instructions = all_instructions + instructions
     print(f"{format_addr(line.address)} {instructions} {line.tokens[0]}")

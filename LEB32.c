@@ -319,6 +319,9 @@ int main(int argc, char *argv[]){
         }
 
         //alu
+
+        //prevent c's sign extention for shifting
+        unsigned int to_shift = 0;
         if(inst == 4){
             switch (inst_data)
             {
@@ -338,7 +341,9 @@ int main(int argc, char *argv[]){
                     regs[W1] = regs[R1] << regs[R2];
                     break;
                 case 5:
-                    regs[W1] = regs[R1] >> regs[R2];
+                    //prevent c's sign extention
+                    to_shift = regs[R1];
+                    regs[W1] = to_shift >> regs[R2];
                     break;
             
                 default:
